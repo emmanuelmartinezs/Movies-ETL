@@ -51,23 +51,32 @@ Using your knowledge of Python, Pandas, the ETL process, and code refactoring, w
 **Code and Image**
 
 
-````SQL
--- Follow the instructions below to complete Deliverable 1.
-SELECT e.emp_no,
-       e.first_name,
-       e.last_name,
-       t.title,
-       t.from_date,
-       t.to_date
-INTO retirement_titles
-FROM employees as e
-INNER JOIN titles as t
-ON (e.emp_no = t.emp_no)
-WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
-order by e.emp_no;
+````python
+import json
+import pandas as pd
+import numpy as np
+import re
+import time
+
+!pip install psycopg2
+
+from sqlalchemy import create_engine
+from config import db_password
+
+# Create the path to your file directory and variables for the three files. 
+file_dir = "C://Users/Emmanuel/Google Drive/Columbia University/GitHub/Movies-ETL/"
+
+# Wikipedia data
+wiki_file = f'{file_dir}/wikipedia.movies.json'
+
+# Kaggle metadata
+kaggle_file = f'{file_dir}/movies_metadata.csv'
+
+# MovieLens rating data.
+ratings_file = f'{file_dir}/ratings.csv'
 ````
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.1.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.1.PNG?raw=true)
 
 2. **The function converts the Wikipedia JSON file to a Pandas DataFrame, and the DataFrame is displayed in the `ETL_function_test.ipynb file`.**
 
@@ -75,35 +84,121 @@ order by e.emp_no;
 
 **Code and Image**
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.1r.PNG?raw=true)
 
-3. ​***The function converts the Kaggle metadata file to a Pandas DataFrame, and the DataFrame is displayed in the `ETL_function_test.ipynb file`.**
-
-> Image with `SQL`, `pgAdmin` , `QuickDBD` & `Python` Code below.
-
-**Code and Image**
-
-
-````SQL
--- Use Dictinct with Orderby to remove duplicate rows
-SELECT DISTINCT ON (emp_no) emp_no,
-first_name,
-last_name,
-title
-INTO unique_titles
-FROM retirement_titles
-ORDER BY emp_no, title DESC;
+````python
+    # Open the read the Wikipedia data JSON file.
+    f'{file_dir}wikipedia-movies.json'
+    
+    # Read in the raw wiki movie data as a Pandas DataFrame.
+    with open(f'{file_dir}/wikipedia-movies.json', mode='r') as file:
+        wiki_movies_raw = json.load(file)
+        wiki_movies_df = pd.DataFrame(wiki_movies_raw)
+    
+    # Return the three DataFrames
+    return wiki_movies_df, kaggle_metadata, ratings
 ````
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.2.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.2.PNG?raw=true)
 
+3. ​***The function converts the Kaggle metadata file to a Pandas DataFrame, and the DataFrame is displayed in the `ETL_function_test.ipynb file`.**
 4. **The function converts the MovieLens ratings data file to a Pandas DataFrame, and the DataFrame is displayed in the `ETL_function_test.ipynb` file.**
 
 > Image with `SQL`, `pgAdmin` , `QuickDBD` & `Python` Code below.
 
 **Code and Image**
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.2r.PNG?raw=true)
+
+````python
+    # Read in the kaggle metadata and MovieLens ratings CSV files as Pandas DataFrames.
+    kaggle_metadata = pd.read_csv(f'{file_dir}movies_metadata.csv', low_memory=False)
+    ratings = pd.read_csv(f'{file_dir}ratings.csv') 
+````
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.3.PNG?raw=true)
+
+4. **All Code related to `ETL_function_test.ipynb` file.**
+
+> Image with `SQL`, `pgAdmin` , `QuickDBD` & `Python` Code below.
+
+**Code and Image**
+
+
+````python
+import json
+import pandas as pd
+import numpy as np
+import re
+import time
+
+!pip install psycopg2
+
+from sqlalchemy import create_engine
+from config import db_password
+
+# 1. Create a function that takes in three arguments;
+# Wikipedia data, Kaggle metadata, and MovieLens rating data (from Kaggle)
+
+def three_arguments_func():
+    # 2. Read in the kaggle metadata and MovieLens ratings CSV files as Pandas DataFrames.
+    kaggle_metadata = pd.read_csv(f'{file_dir}movies_metadata.csv', low_memory=False)
+    ratings = pd.read_csv(f'{file_dir}ratings.csv')    
+
+    # 3. Open the read the Wikipedia data JSON file.
+    f'{file_dir}wikipedia-movies.json'
+    
+    # 4. Read in the raw wiki movie data as a Pandas DataFrame.
+    with open(f'{file_dir}/wikipedia-movies.json', mode='r') as file:
+        wiki_movies_raw = json.load(file)
+        wiki_movies_df = pd.DataFrame(wiki_movies_raw)
+    
+    # 5. Return the three DataFrames
+    return wiki_movies_df, kaggle_metadata, ratings
+
+# 6. Create the path to your file directory and variables for the three files. 
+file_dir = "C://Users/Emmanuel/Google Drive/Columbia University/GitHub/Movies-ETL/"
+
+# Wikipedia data
+wiki_file = f'{file_dir}/wikipedia.movies.json'
+
+# Kaggle metadata
+kaggle_file = f'{file_dir}/movies_metadata.csv'
+
+# MovieLens rating data.
+ratings_file = f'{file_dir}/ratings.csv'
+
+# 7. Set the three variables in Step 6 equal to the function created in Step 1.
+wiki_file, kaggle_file, ratings_file = three_arguments_func()
+
+# 8. Set the DataFrames from the return statement equal to the file names in Step 6. 
+wiki_movies_df = wiki_file
+kaggle_metadata = kaggle_file
+ratings = ratings_file
+
+# 9. Check the wiki_movies_df DataFrame.
+wiki_movies_df.head()
+
+# 10. Check the kaggle_metadata DataFrame.
+kaggle_metadata.head()
+
+# 11. Check the ratings DataFrame.
+ratings.head()
+
+#by Emmanuel Martinez
+````
+
+> Check the wiki_movies_df DataFrame. `wiki_movies_df.head()`
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.4.1.PNG?raw=true)
+
+
+> Check the kaggle_metadata DataFrame. `kaggle_metadata.head()`
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.4.2.PNG?raw=true)
+
+
+> Check the ratings DataFrame. `ratings.head()`
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.4.3.PNG?raw=true)
 
 
 
