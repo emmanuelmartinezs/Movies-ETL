@@ -76,7 +76,7 @@ kaggle_file = f'{file_dir}/movies_metadata.csv'
 ratings_file = f'{file_dir}/ratings.csv'
 ````
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.1.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/1.1.PNG?raw=true)
 
 2. **The function converts the Wikipedia JSON file to a Pandas DataFrame, and the DataFrame is displayed in the `ETL_function_test.ipynb file`.**
 
@@ -98,7 +98,7 @@ ratings_file = f'{file_dir}/ratings.csv'
     return wiki_movies_df, kaggle_metadata, ratings
 ````
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.2.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/1.2.PNG?raw=true)
 
 3. ​***The function converts the Kaggle metadata file to a Pandas DataFrame, and the DataFrame is displayed in the `ETL_function_test.ipynb file`.**
 4. **The function converts the MovieLens ratings data file to a Pandas DataFrame, and the DataFrame is displayed in the `ETL_function_test.ipynb` file.**
@@ -114,7 +114,7 @@ ratings_file = f'{file_dir}/ratings.csv'
     ratings = pd.read_csv(f'{file_dir}ratings.csv') 
 ````
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.3.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/1.3.PNG?raw=true)
 
 4. **All Code related to `ETL_function_test.ipynb` file.**
 
@@ -188,17 +188,17 @@ ratings.head()
 
 > Check the wiki_movies_df DataFrame. `wiki_movies_df.head()`
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.4.1.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/1.4.1.PNG?raw=true)
 
 
 > Check the kaggle_metadata DataFrame. `kaggle_metadata.head()`
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.4.2.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/1.4.2.PNG?raw=true)
 
 
 > Check the ratings DataFrame. `ratings.head()`
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/Images/1.4.3.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/1.4.3.PNG?raw=true)
 
 
 
