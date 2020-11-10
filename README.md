@@ -10,7 +10,7 @@ Amazing Prime loves the dataset and wants to keep it updated on a daily basis. B
 1. ***Deliverable 1***: Write an ETL Function to Read Three Data Files
 2. ***Deliverable 2***: Extract and Transform the Wikipedia Data
 3. ***Deliverable 3***: Extract and Transform the Kaggle Data
-4. ***Deliverable 3***: Create the Movie Database
+4. ***Deliverable 4***: Create the Movie Database
 5. ***Deliverable 5***: A written report on the Movie Database analysis [`README.md`](https://github.com/emmanuelmartinezs/Movies-ETL). 
 
 ## Resources and Before Start Notes:
