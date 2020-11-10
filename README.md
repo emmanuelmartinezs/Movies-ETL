@@ -202,7 +202,6 @@ ratings.head()
 
 
 
-
 ## Deliverable 2: Extract and Transform the Wikipedia Data
 ### Deliverable Requirements:
 Using your knowledge of Python, Pandas, the ETL process, and code refactoring, extract and transform the Wikipedia data so you can merge it with the Kaggle metadata. While extracting the IMDb IDs using a regular expression string and dropping duplicates, use a `try-except` block to catch errors.
@@ -231,23 +230,28 @@ Using your knowledge of Python, Pandas, the ETL process, and code refactoring, e
 **Code and Image**
 
 
-````SQL
--- Follow the instructions below to complete Deliverable 1.
-SELECT e.emp_no,
-       e.first_name,
-       e.last_name,
-       t.title,
-       t.from_date,
-       t.to_date
-INTO retirement_titles
-FROM employees as e
-INNER JOIN titles as t
-ON (e.emp_no = t.emp_no)
-WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
-order by e.emp_no;
+````python
+# 1. Add the clean movie function that takes in the argument, "movie".
+def clean_movie(movie):
+    movie = dict(movie) #create a non-destructive copy
+    alt_titles = {}
+    for key in ['Also known as','Arabic','Cantonese','Chinese','French',
+                'Hangul','Hebrew','Hepburn','Japanese','Literally',
+                'Mandarin','McCune–Reischauer','Original title','Polish',
+                'Revised Romanization','Romanized','Russian',
+                'Simplified','Traditional','Yiddish']:
+        if key in movie:
+            alt_titles[key] = movie[key]
+            movie.pop(key)
+    if len(alt_titles) > 0:
+        movie['alt_titles'] = alt_titles
+
+    return movie 
 ````
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.1.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/2.1.PNG?raw=true)
+
+
 
 2. **A `try-except` block is used to catch errors while extracting the IMDb IDs with a regular expression and dropping duplicate IDs.**
 
@@ -255,7 +259,18 @@ order by e.emp_no;
 
 **Code and Image**
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.1r.PNG?raw=true)
+
+````python
+    try:
+        wiki_movies_df['imdb_id'] = wiki_movies_df['imdb_link'].str.extract(r'(tt\d{7})')
+        wiki_movies_df.drop_duplicates(subset='imdb_id', inplace=True)
+    
+    except: 
+        print("No link avialable")
+````
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/2.2.PNG?raw=true)
+
 
 3. ​***The extraction and transformation of the Wikipedia data in the ETL function does the following:**
     1. A list comprehension is used to keep columns with non-null values.
@@ -273,18 +288,147 @@ order by e.emp_no;
 **Code and Image**
 
 
-````SQL
--- Use Dictinct with Orderby to remove duplicate rows
-SELECT DISTINCT ON (emp_no) emp_no,
-first_name,
-last_name,
-title
-INTO unique_titles
-FROM retirement_titles
-ORDER BY emp_no, title DESC;
+````python
+# Complete Code:
+
+def three_arguments_func():
+    # 2. Read in the kaggle metadata and MovieLens ratings CSV files as Pandas DataFrames.
+    kaggle_metadata = pd.read_csv(f'{file_dir}movies_metadata.csv', low_memory=False)
+    ratings = pd.read_csv(f'{file_dir}ratings.csv')
+
+
+    # Open and read the Wikipedia data JSON file.
+    f'{file_dir}wikipedia-movies.json'
+    with open(f'{file_dir}/wikipedia-movies.json', mode='r') as file:
+        wiki_movies_raw = json.load(file)
+        wiki_movies_df = pd.DataFrame(wiki_movies_raw)
+    
+    # 3. Write a list comprehension to filter out TV shows.
+    wiki_tv = [tvshows for tvshows in wiki_movies_raw 
+        if 'Television series' in tvshows] 
+
+    # 4. Write a list comprehension to iterate through the cleaned wiki movies list
+    # and call the clean_movie function on each movie.
+    clean_movies = [clean_movie(movie) for movie in wiki_movies_raw]    
+
+    # 5. Read in the cleaned movies list from Step 4 as a DataFrame.
+    wiki_movies_df = pd.DataFrame(clean_movies)
+
+    # 6. Write a try-except block to catch errors while extracting the IMDb ID using a regular expression string and
+    #  dropping any imdb_id duplicates. If there is an error, capture and print the exception.
+    try:
+        wiki_movies_df['imdb_id'] = wiki_movies_df['imdb_link'].str.extract(r'(tt\d{7})')
+        wiki_movies_df.drop_duplicates(subset='imdb_id', inplace=True)
+    
+    except: 
+        print("No link avialable")
+
+    #  7. Write a list comprehension to keep the columns that don't have null values from the wiki_movies_df DataFrame.
+    wiki_columns_to_keep = [column for column in wiki_movies_df.columns if wiki_movies_df[column].isnull().sum() < len(wiki_movies_df) * 0.9]
+    wiki_movies_df = wiki_movies_df[wiki_columns_to_keep]  
+
+    # 8. Create a variable that will hold the non-null values from the “Box office” column.
+    box_office = wiki_movies_df['Box office'].dropna()
+
+    # 9. Convert the box office data created in Step 8 to string values using the lambda and join functions.
+    box_office[box_office.map(lambda x: type(x) != str)] 
+
+    # 10. Write a regular expression to match the six elements of "form_one" of the box office data.
+    form_one = r'\$\s*\d+\.?\d*\s*[mb]illi?on'
+    
+    # 11. Write a regular expression to match the three elements of "form_two" of the box office data.
+    form_two = r'\$\s*\d{1,3}(?:[,\.]\d{3})+(?!\s[mb]illion)'    
+    
+    # 12. Add the parse_dollars function.
+    def parse_dollars(s):
+        if type(s) != str:
+            return np.nan
+        if re.match(r'\$\s*\d+\.?\d*\s*milli?on', s, flags=re.IGNORECASE):
+            s = re.sub('\$|\s|[a-zA-Z]','', s)
+            value = float(s) * 10**6
+            return value
+        elif re.match(r'\$\s*\d+\.?\d*\s*billi?on', s, flags=re.IGNORECASE):
+            s = re.sub('\$|\s|[a-zA-Z]','', s)
+            value = float(s) * 10**9
+            return value
+        elif re.match(r'\$\s*\d{1,3}(?:[,\.]\d{3})+(?!\s[mb]illion)', s, flags=re.IGNORECASE):
+            s = re.sub('\$|,','', s)
+            value = float(s)
+            return value
+        else:
+            return np.nan
+
+    # 13. Clean the box office column in the wiki_movies_df DataFrame.
+    wiki_movies_df['box_office'] = box_office.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
+    wiki_movies_df.drop('Box office', axis=1, inplace=True)
+    
+    # 14. Clean the budget column in the wiki_movies_df DataFrame.
+    budget = wiki_movies_df['Budget'].dropna()
+    
+    budget = budget.map(lambda x: ' '.join(x) if type(x) == list else x)
+    
+    budget = budget.str.replace(r'\$.*[-—–](?![a-z])', '$', regex=True)
+    
+    matches_form_one = budget.str.contains(form_one, flags=re.IGNORECASE)
+    matches_form_two = budget.str.contains(form_two, flags=re.IGNORECASE)
+    budget[~matches_form_one & ~matches_form_two]
+    
+    budget = budget.str.replace(r'\[\d+\]\s*', '')
+    budget[~matches_form_one & ~matches_form_two]
+    
+    wiki_movies_df['budget'] = budget.str.extract(f'({form_one}|{form_two})', flags=re.IGNORECASE)[0].apply(parse_dollars)
+    
+    wiki_movies_df.drop('Budget', axis=1, inplace=True) 
+    
+    # 15. Clean the release date column in the wiki_movies_df DataFrame.
+    release_date = wiki_movies_df['Release date'].dropna().apply(lambda x: ' '.join(x) if type(x) == list else x)
+    
+    date_form_one = r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s[123]\d,\s\d{4}'
+    date_form_two = r'\d{4}.[01]\d.[123]\d'
+    date_form_three = r'(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}'
+    date_form_four = r'\d{4}'
+    
+    release_date.str.extract(f'({date_form_one}|{date_form_two}|{date_form_three}|{date_form_four})', flags=re.IGNORECASE)
+    
+    wiki_movies_df['release_date'] = pd.to_datetime(release_date.str.extract(f'({date_form_one}|{date_form_two}|{date_form_three}|{date_form_four})')[0], infer_datetime_format=True)
+    
+    
+    # 16. Clean the running time column in the wiki_movies_df DataFrame.
+    running_time = wiki_movies_df['Running time'].dropna().apply(lambda x: ' '.join(x) if type(x) == list else x)
+    
+    running_time_extract = running_time.str.extract(r'(\d+)\s*ho?u?r?s?\s*(\d*)|(\d+)\s*m')
+    
+    running_time_extract = running_time_extract.apply(lambda col: pd.to_numeric(col, errors='coerce')).fillna(0)
+    
+    wiki_movies_df['running_time'] = running_time_extract.apply(lambda row: row[0]*60 + row[1] if row[2] == 0 else row[2], axis=1)
+    
+    wiki_movies_df.drop('Running time', axis=1, inplace=True)
+
+    # Return three variables. The first is the wiki_movies_df DataFrame
+    return wiki_movies_df, kaggle_metadata, ratings
+
+# 17. Create the path to your file directory and variables for the three files.
+file_dir = "C://Users/Emmanuel/Google Drive/Columbia University/GitHub/Movies-ETL/" 
+# The Wikipedia data
+wiki_file = f'{file_dir}/wikipedia.movies.json'
+# The Kaggle metadata
+kaggle_file = f'{file_dir}/movies_metadata.csv'
+# The MovieLens rating data.
+ratings_file = f'{file_dir}/ratings.csv'
+
+# 18. Set the three variables equal to the function created in D1.
+wiki_file, kaggle_file, ratings_file = three_arguments_func()
+
+# 19. Set the wiki_movies_df equal to the wiki_file variable. 
+wiki_movies_df = wiki_file
+
 ````
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.2.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.1.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.2.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.3.PNG?raw=true)
+
+
 
 4. **The cleaned Wikipedia data is converted to a Pandas DataFrame, and the DataFrame is displayed in the `ETL_clean_wiki_movies.ipynb` file.**
 
@@ -292,7 +436,21 @@ ORDER BY emp_no, title DESC;
 
 **Code and Image**
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.2r.PNG?raw=true)
+
+````python
+# 20. Check that the wiki_movies_df DataFrame looks like this. 
+wiki_movies_df.head() 
+
+# 21. Check that wiki_movies_df DataFrame columns are correct. 
+wiki_movies_df.columns.to_list()
+````
+> Check that the wiki_movies_df DataFrame looks like this.
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/4.1.PNG?raw=true)
+
+> Check that wiki_movies_df DataFrame columns are correct. 
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/4.2.PNG?raw=true)
 
 
 
