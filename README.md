@@ -490,23 +490,85 @@ Using your knowledge of Python, Pandas, the ETL process, and code refactoring, e
 **Code and Image**
 
 
-````SQL
--- Follow the instructions below to complete Deliverable 1.
-SELECT e.emp_no,
-       e.first_name,
-       e.last_name,
-       t.title,
-       t.from_date,
-       t.to_date
-INTO retirement_titles
-FROM employees as e
-INNER JOIN titles as t
-ON (e.emp_no = t.emp_no)
-WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
-order by e.emp_no;
-````
+````python
+    # 2. Clean the Kaggle metadata.
+    kaggle_metadata[~kaggle_metadata['adult'].isin(['True','False'])]
+    
+    kaggle_metadata = kaggle_metadata[kaggle_metadata['adult'] == 'False'].drop('adult',axis='columns')
+    
+    kaggle_metadata['video'] == 'True'
+    
+    kaggle_metadata['video'] = kaggle_metadata['video'] == 'True'
+    
+    kaggle_metadata['budget'] = kaggle_metadata['budget'].astype(int)
+    kaggle_metadata['id'] = pd.to_numeric(kaggle_metadata['id'], errors='raise')
+    kaggle_metadata['popularity'] = pd.to_numeric(kaggle_metadata['popularity'], errors='raise')
+    
+    kaggle_metadata['release_date'] = pd.to_datetime(kaggle_metadata['release_date'])
+    
+    pd.to_datetime(ratings['timestamp'], unit='s')
+    
+    ratings['timestamp'] = pd.to_datetime(ratings['timestamp'], unit='s')
+    
+    # 3. Merged the two DataFrames into the movies DataFrame.
+    movies_df = pd.merge(wiki_movies_df, kaggle_metadata, on='imdb_id', suffixes=['_wiki','_kaggle'])
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.1.PNG?raw=true)
+    # 4. Drop unnecessary columns from the merged DataFrame.
+
+
+    # 5. Add in the function to fill in the missing Kaggle data.
+    def missing_kaggle_data(df, kaggle_column, wiki_column):
+        df[kaggle_column] = df.apply(
+            lambda row: row[wiki_column] if row[kaggle_column] == 0 else row[kaggle_column], axis=1)
+        df.drop(columns=wiki_column, inplace=True)
+
+    # 6. Call the function in Step 5 with the DataFrame and columns as the arguments.
+    missing_kaggle_data(movies_df, 'budget_kaggle', 'budget_wiki')
+    missing_kaggle_data(movies_df, 'revenue', 'box_office')
+    movies_df
+
+    # 7. Filter the movies DataFrame for specific columns.
+    for col in movies_df.columns:
+        lists_to_tuples = lambda x: tuple(x) if type(x) == list else x
+        value_counts = movies_df[col].apply(lists_to_tuples).value_counts(dropna=False)
+        num_values = len(value_counts)
+    if num_values == 1:
+        print(col)
+
+    # 8. Rename the columns in the movies DataFrame.
+    column_names = ['imdb_id','id','title_kaggle','original_title','tagline','belongs_to_collection','url','imdb_link',
+                        'runtime','budget_kaggle','revenue','release_date_kaggle','popularity','vote_average','vote_count',
+                        'genres','original_language','overview','spoken_languages','Country',
+                        'production_companies','production_countries','Distributor',
+                        'Producer(s)','Director','Starring','Cinematography','Editor(s)','Writer(s)','Composer(s)','Based on'
+                       ]
+    movies_df = movies_df.reindex(columns=column_names)
+
+    
+    movies_df.rename({'id':'kaggle_id',
+                  'title_kaggle':'title',
+                  'url':'wikipedia_url',
+                  'budget_kaggle':'budget',
+                  'release_date_kaggle':'release_date',
+                  'Country':'country',
+                  'Distributor':'distributor',
+                  'Producer(s)':'producers',
+                  'Director':'director',
+                  'Starring':'starring',
+                  'Cinematography':'cinematography',
+                  'Editor(s)':'editors',
+                  'Writer(s)':'writers',
+                  'Composer(s)':'composers',
+                  'Based on':'based_on'
+                 }, axis='columns', inplace=True)
+
+````
+> Image Code.
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.0.1.PNG?raw=true)
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.0.2.PNG?raw=true)
+
 
 2. **The extraction and transformation of the MovieLens ratings data using the ETL function does the following:**
     1. The ratings counts are cleaned.
@@ -518,7 +580,30 @@ order by e.emp_no;
 
 **Code and Image**
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.1r.PNG?raw=true)
+
+````python
+    # 9. Transform and merge the ratings DataFrame.
+    rating_counts = ratings.groupby(['movieId','rating'], as_index=False).count()
+    
+    rating_counts = ratings.groupby(['movieId','rating'], as_index=False).count() \
+                .rename({'userId':'count'}, axis=1)
+    
+    rating_counts = ratings.groupby(['movieId','rating'], as_index=False).count() \
+                .rename({'userId':'count'}, axis=1) \
+                .pivot(index='movieId',columns='rating', values='count')
+    
+    rating_counts.columns = ['rating_' + str(col) for col in rating_counts.columns]
+    
+    movies_with_ratings_df = pd.merge(movies_df, rating_counts, left_on='kaggle_id', right_index=True, how='left')
+    
+    movies_with_ratings_df[rating_counts.columns] = movies_with_ratings_df[rating_counts.columns].fillna(0)
+````
+
+
+> Transform and merge the ratings DataFrame.
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.0.3.PNG?raw=true)
+
 
 3. ​***The `movies_with_ratings_df` and the `movies_df DataFrames` are displayed in the `ETL_clean_kaggle_data.ipynb` file.**
 
@@ -527,18 +612,46 @@ order by e.emp_no;
 **Code and Image**
 
 
-````SQL
--- Use Dictinct with Orderby to remove duplicate rows
-SELECT DISTINCT ON (emp_no) emp_no,
-first_name,
-last_name,
-title
-INTO unique_titles
-FROM retirement_titles
-ORDER BY emp_no, title DESC;
-````
+````python
+# 10. Create the path to your file directory and variables for the three files.
+file_dir = "C://Users/Emmanuel/Google Drive/Columbia University/GitHub/Movies-ETL/"
+# The Wikipedia data
+wiki_file = f'{file_dir}/wikipedia.movies.json'
+# The Kaggle metadata
+kaggle_file = f'{file_dir}/movies_metadata.csv'
+# The MovieLens rating data.
+ratings_file = f'{file_dir}/ratings.csv'
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.2.PNG?raw=true)
+# 11. Set the three variables equal to the function created in D1.
+wiki_file, kaggle_file, ratings_file = three_arguments_func()
+
+# 12. Set the DataFrames from the return statement equal to the file names in Step 11. 
+wiki_movies_df = wiki_file
+movies_with_ratings_df = kaggle_file
+movies_df = ratings_file
+
+# 13. Check the wiki_movies_df DataFrame. 
+wiki_movies_df.head()
+
+# 14. Check the movies_with_ratings_df DataFrame.
+movies_with_ratings_df.head()
+
+# 15. Check the movies_df DataFrame. 
+movies_df.head()
+````
+> Check the wiki_movies_df DataFrame. 
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.0.4.PNG?raw=true)
+
+
+> Check the movies_with_ratings_df DataFrame.
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.0.5.PNG?raw=true)
+
+
+> Check the movies_df DataFrame.
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.0.6.PNG?raw=true)
 
 
 
