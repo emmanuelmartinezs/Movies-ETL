@@ -605,7 +605,7 @@ Using your knowledge of Python, Pandas, the ETL process, and code refactoring, e
 ![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/3.0.3.PNG?raw=true)
 
 
-3. ​***The `movies_with_ratings_df` and the `movies_df DataFrames` are displayed in the `ETL_clean_kaggle_data.ipynb` file.**
+3. ​**The `movies_with_ratings_df` and the `movies_df DataFrames` are displayed in the `ETL_clean_kaggle_data.ipynb` file.**
 
 > Image with `SQL`, `pgAdmin` , `QuickDBD` & `Python` Code below.
 
@@ -673,23 +673,59 @@ Use your knowledge of Python, Pandas, the ETL process, code refactoring, and Pos
 **Code and Image**
 
 
-````SQL
+````Python
 -- Follow the instructions below to complete Deliverable 1.
-SELECT e.emp_no,
-       e.first_name,
-       e.last_name,
-       t.title,
-       t.from_date,
-       t.to_date
-INTO retirement_titles
-FROM employees as e
-INNER JOIN titles as t
-ON (e.emp_no = t.emp_no)
-WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
-order by e.emp_no;
+# -------------------------------------------
+# Transform and merge the ratings DataFrame:
+# -------------------------------------------
+
+    from sqlalchemy import create_engine
+    from config import db_password
+    !pip install psycopg2
+    
+    # Create the Database Engine - local server, the connection string will be as follows:
+    db_string = f"postgres://postgres:{db_password}@127.0.0.1:5432/movie_data"
+    
+    # Create the database engine (to the PostgreSQL database)
+    engine = create_engine(db_string)
+    
+    # Import the movies_df DataFrame to a SQL database.
+    movies_df.to_sql(name='movies', if_exists='replace',con=engine)
+    
+    # Create a variable rows_imported
+    rows_imported = 0
+    
+    # Set start_time from time.time()
+    start_time = time.time()
+
+    for data in pd.read_csv(f'{file_dir}/ratings.csv', chunksize=1000000):
+
+        # Print out the range of rows
+        print(f'importing rows {rows_imported} to {rows_imported + len(data)}...', end='')
+
+        data.to_sql(name='ratings', con=engine, if_exists='append')
+
+        # Increment the numb. rows imported
+        rows_imported += len(data)
+
+        # Final print out
+        print(f'Done. {time.time() - start_time} total seconds elapsed')
+````
+> Jupyter Notebook Code:
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/4.0.1.PNG?raw=true)
+
+
+````SQL
+SELECT COUNT(*)
+FROM movies;
 ````
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.1.PNG?raw=true)
+> Jupyter Notebook Code:
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/movies_query.PNG?raw=true)
+
+
 
 2. **The data from the MovieLens rating CSV file is added to the `ratings` table in the SQL database, as determined by the `ratings_query.png`.**
 
@@ -697,7 +733,21 @@ order by e.emp_no;
 
 **Code and Image**
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.1r.PNG?raw=true)
+````SQL
+SELECT COUNT( *) as "Number of Rows"
+FROM ratings;
+````
+
+> Rows on `rating` table:
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/ratings_query.PNG?raw=true)
+
+
+> Rating CSV file added to `rating` table in the SQL databese:
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/4.0.2.PNG?raw=true)
+
+
 
 3. ​***​The elapsed time to add the data to the database is displayed in the `ETL_create_database.ipynb` file.**
 
@@ -706,18 +756,27 @@ order by e.emp_no;
 **Code and Image**
 
 
-````SQL
--- Use Dictinct with Orderby to remove duplicate rows
-SELECT DISTINCT ON (emp_no) emp_no,
-first_name,
-last_name,
-title
-INTO unique_titles
-FROM retirement_titles
-ORDER BY emp_no, title DESC;
+````Python
+    # Set start_time from time.time()
+    start_time = time.time()
+
+    for data in pd.read_csv(f'{file_dir}/ratings.csv', chunksize=1000000):
+
+        # Print out the range of rows
+        print(f'importing rows {rows_imported} to {rows_imported + len(data)}...', end='')
+
+        data.to_sql(name='ratings', con=engine, if_exists='append')
+
+        # Increment the numb. rows imported
+        rows_imported += len(data)
+
+        # Final print out
+        print(f'Done. {time.time() - start_time} total seconds elapsed')
 ````
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/1.2.PNG?raw=true)
+> The elapsed time:
+
+![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/4.0.3.PNG?raw=true)
 
 
 
