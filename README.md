@@ -674,7 +674,6 @@ Use your knowledge of Python, Pandas, the ETL process, code refactoring, and Pos
 
 
 ````Python
--- Follow the instructions below to complete Deliverable 1.
 # -------------------------------------------
 # Transform and merge the ratings DataFrame:
 # -------------------------------------------
@@ -713,7 +712,7 @@ Use your knowledge of Python, Pandas, the ETL process, code refactoring, and Pos
 ````
 > Jupyter Notebook Code:
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/4.0.1.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/4.0.1.PNG?raw=true)
 
 
 ````SQL
@@ -723,7 +722,7 @@ FROM movies;
 
 > Jupyter Notebook Code:
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/movies_query.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/movies_query.PNG?raw=true)
 
 
 
@@ -740,12 +739,12 @@ FROM ratings;
 
 > Rows on `rating` table:
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/ratings_query.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/ratings_query.PNG?raw=true)
 
 
 > Rating CSV file added to `rating` table in the SQL databese:
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/4.0.2.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/4.0.2.PNG?raw=true)
 
 
 
@@ -776,7 +775,7 @@ FROM ratings;
 
 > The elapsed time:
 
-![name-of-you-image](https://github.com/emmanuelmartinezs/Pewlett-Hackard-Analysis/blob/main/Resources/Images/4.0.3.PNG?raw=true)
+![name-of-you-image](https://github.com/emmanuelmartinezs/Movies-ETL/blob/main/Resources/images/4.0.3.PNG?raw=true)
 
 
 
